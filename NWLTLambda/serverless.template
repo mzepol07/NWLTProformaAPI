@@ -1,0 +1,117 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Transform" : "AWS::Serverless-2016-10-31",
+  "Description" : "Starting template for an AWS Serverless Application.",
+  "Parameters" : {
+  },
+  "Resources" : {
+    "GetForms" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetFormList",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "GetFormValues" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetFormValues",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "GetCities" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetCities",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "GetParameters" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetParameters",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "GetAllParameters" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetAllParameters",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "GetFormParameters" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetFormParameters",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "GetCalcParameters" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetCalcParameters",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "GetParamValues" :{
+        "Type" : "AWS::Serverless::Function",
+    "Properties": {
+        "Handler": "NWLTLambda::NWLTLambda.Functions::GetParameterValues",
+        "Runtime": "dotnetcore3.1",
+        "CodeUri": "",
+        "Description": "Default function",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
+    "SingleFamily" : {
+      "Type" : "AWS::Serverless::Function",
+      "Properties": {
+        "Handler": "NWLTLambda::NWLTLambda.Functions::SFProforma",
+        "Runtime": "dotnetcore3.1",
+        "CodeUri": "",
+        "Description": "Default function",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      }
+    }
+  }
+}
