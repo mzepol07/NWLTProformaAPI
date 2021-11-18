@@ -57,7 +57,44 @@ namespace NWLTLambda
             }
             return mResponse;
         }
+        
+        public async Task<List<FormModel>> SearchForms(object request, ILambdaContext context) //task is the model if want to return
+        {
+            List<FormModel> mResponse = new List<FormModel>();
+            mySqlAccess _sqlaccess = new mySqlAccess();
+            ApiFormSearchAuthorize mFullAuthRequest = new ApiFormSearchAuthorize();
+            FormSearchInputModel mSearchParams = new FormSearchInputModel();
+            FormModel mSingleResponse = new FormModel();
+            // Verify Request
+            if (request == null)
+            {
+                mSingleResponse.mResponseMessage = "Request cannot be empty";
+                mResponse.Add(mSingleResponse);
+                context.Logger.LogLine($"ERROR:" + "RequestID: " + context.AwsRequestId + " Request string is Empty");
 
+            }
+            else
+            {
+                context.Logger.LogLine($"Info: " + "RequestID: " + context.AwsRequestId + ", Deserializing request string");
+                try
+                {
+                    mFullAuthRequest = JsonConvert.DeserializeObject<ApiFormSearchAuthorize>(request.ToString());
+                    mSearchParams = mFullAuthRequest.Body;
+                    context.Logger.LogLine($"Info: Request sent is: " + "RequestID: " + context.AwsRequestId + " " + request.ToString());
+                }
+                catch (Exception ex)
+                {
+                    mSingleResponse.mResponseMessage = "Request is Invalid: " + ex.Message;
+                    mResponse.Add(mSingleResponse);
+                    context.Logger.LogLine($"ERROR: " + "RequestID: " + context.AwsRequestId + " Invalid Request: " + ex.Message);
+                    return mResponse;
+                }
+                context.Logger.LogLine($"Info: " + "RequestID: " + context.AwsRequestId + ", Deserializing request string");
+                mResponse = _sqlaccess.SearchForms(mSearchParams);
+            }
+            return mResponse;
+        }
+        
         public async Task<List<FormValueModel>> GetFormValues (object request, ILambdaContext context) //task is the model if want to return
         {
             List<FormValueModel> mResponse = new List<FormValueModel>();
@@ -239,14 +276,14 @@ namespace NWLTLambda
             return mResponse;
         }
 
-        public async Task<List<ParametersOutputModel>> GetFormParameters(object request, ILambdaContext context) //task is the model if want to return
+        public async Task<List<ParametersOutputModel2>> GetFormParameters(object request, ILambdaContext context) //task is the model if want to return
         {
-            List<ParametersOutputModel> mResponse = new List<ParametersOutputModel>();
+            List<ParametersOutputModel2> mResponse = new List<ParametersOutputModel2>();
             ApiCityAuthorize mFullAuthRequest = new ApiCityAuthorize();
             CityInputModel mCityParams = new CityInputModel();
             mySqlAccess _sqlaccess = new mySqlAccess();
             CalcEngine _calcEngine = new CalcEngine();
-            ParametersOutputModel mSingleResponse = new ParametersOutputModel();
+            ParametersOutputModel2 mSingleResponse = new ParametersOutputModel2();
             // Verify Request
             if (request == null)
             {
@@ -274,7 +311,7 @@ namespace NWLTLambda
 
 
 
-                // Request from DB
+                // Save Both Inputs to DB
                 mResponse = _sqlaccess.GetFormParams(mCityParams);
             }
 
@@ -328,6 +365,7 @@ namespace NWLTLambda
             InputModel mInputParams = new InputModel();
             mySqlAccess _sqlaccess = new mySqlAccess();
             CalcEngine _calcEngine = new CalcEngine();
+            ReCalcEngine _recalcEngine = new ReCalcEngine();
             ParametersList mParams = new ParametersList();
 
             // Verify Request
@@ -358,137 +396,188 @@ namespace NWLTLambda
                     foreach (ParameterInputModel mParam in mInputParams.parameters)
                     {
                         switch (mParam.parameterid)
-                        {
-                            case "1":
-                                mParams.State = mParam.value.ToString();
-                                break;
-                            case "2":
-                                mParams.City = Convert.ToInt32(mParam.value);
-                                break;
-                            case "3":
-                                mParams.Address = mParam.value.ToString();
-                                break;
-                            case "4":
+                        {   
+                            case 4:
                                 mParams.YearBuilt = Convert.ToInt32(mParam.value);
                                 break;
-                            case "5":
+                            case 5:
                                 mParams.LotSize = Convert.ToDouble(mParam.value);
                                 break;
-                            case "6":
+                            case 6:
                                 mParams.Zoning = mParam.value.ToString();
                                 break;
-                            case "7":
-                                mParams.MHASuffix = mParam.value.ToString();
+                            case 7:
+                                mParams.MhaSuffix = mParam.value.ToString();
                                 break;
-                            case "8":
-                                mParams.AccessedValue = Convert.ToDouble(mParam.value);
+                            case 8:
+                                mParams.AssessedValue = Convert.ToDouble(mParam.value);
                                 break;
-                            case "9":
+                            case 9:
                                 mParams.LotWidth = Convert.ToDouble(mParam.value);
                                 break;
-                            case "10":
+                            case 10:
                                 mParams.LotLength = Convert.ToDouble(mParam.value);
                                 break;
-                            case "11":
+                            case 11:
                                 mParams.HighEndArea = mParam.value.ToString();
                                 break;
-                            case "12":
+                            case 12:
                                 mParams.MajorArterial = mParam.value.ToString();
                                 break;
-                            case "13":
+                            case 13:
                                 mParams.CornerLot = mParam.value.ToString();
                                 break;
-                            case "14":
+                            case 14:
                                 mParams.Alley = mParam.value.ToString();
                                 break;
-                            case "15":
+                            case 15:
                                 mParams.GrowthArea = mParam.value.ToString();
                                 break;
-                            case "16":
-                                mParams.ElevationChange = mParam.value.ToString();
+                            case 16:
+                                mParams.ElevationChange = Convert.ToDouble(mParam.value);
                                 break;
-                            case "17":
+                            case 17:
                                 mParams.SlopeDirection = mParam.value.ToString();
                                 break;
-                            case "18":
-                                mParams.TreeCanopy = mParam.value.ToString();
+                            case 18:
+                                mParams.TreeCanopyCoverage = mParam.value.ToString();
                                 break;
-                            case "19":
-                                mParams.ECAs = mParam.value.ToString();
+                            case 19:
+                                mParams.Ecas = mParam.value.ToString();
                                 break;
-                            case "20":
+                            case 20:
                                 mParams.WaterMainExtension = mParam.value.ToString();
                                 break;
-                            case "21":
+                            case 21:
                                 mParams.WaterMainLength = Convert.ToDouble(mParam.value);
                                 break;
-                            case "22":
+                            case 22:
                                 mParams.SewerMainExtension = mParam.value.ToString();
                                 break;
-                            case "23":
+                            case 23:
                                 mParams.SewerMainLength = Convert.ToDouble(mParam.value);
                                 break;
-                            case "24":
-                                mParams.AlleyReconstruction = mParam.value.ToString();
+                            case 24:
+                                mParams.AlleyConstruction = mParam.value.ToString();
                                 break;
-                            case "25":
-                                mParams.AlleyReconstructionLength = Convert.ToDouble(mParam.value);
+                            case 25:
+                                mParams.AlleyConstructionLength = Convert.ToDouble(mParam.value);
                                 break;
-                            case "26":
+                            case 26:
                                 mParams.UndergroundGarage = mParam.value.ToString();
                                 break;
-                            case "27":
-                                mParams.NumberofSpots = Convert.ToInt32(mParam.value);
+                            case 27:
+                                mParams.NumberOfSpots = Convert.ToInt32(mParam.value);
                                 break;
-                            case "28":
-                                mParams.StructureType = mParam.value.ToString();
+                            //case 28:
+                            //    mParams.StructureType = mParam.value.ToString();
+                            //    break;
+                            case 29:
+                                mParams.Mhaarea = mParam.value.ToString();
                                 break;
-                            case "29":
-                                mParams.MHaArea = mParam.value.ToString();
+                            case 83:
+                                mParams.DrainageMain = mParam.value.ToString();
                                 break;
-                            case "30":
-                                mParams.NumberofHomes = Convert.ToInt32(mParam.value);
+                            case 84:
+                                mParams.DrainageDistance = Convert.ToDouble(mParam.value);
                                 break;
-                            case "31":
-                                mParams.ListingPrice = Convert.ToDouble(mParam.value);
+                            case 30:
+                                mParams.Number_of_homes = Convert.ToInt32(mParam.value);
                                 break;
-                            case "32":
-                                mParams.AADU = Convert.ToDouble(mParam.value);
+                            case 32:
+                                mParams.Aadu = Convert.ToDouble(mParam.value);
                                 break;
-                            case "33":
-                                mParams.AADUSize = Convert.ToDouble(mParam.value);
+                            case 33:
+                                mParams.Aadu_size = Convert.ToDouble(mParam.value);
                                 break;
-                            case "34":
-                                mParams.DADU = Convert.ToDouble(mParam.value);
+                            case 34:
+                                mParams.Dadu = Convert.ToDouble(mParam.value);
                                 break;
-                            case "35":
-                                mParams.DADUSize = Convert.ToDouble(mParam.value);
+                            case 35:
+                                mParams.Dadu_size = Convert.ToDouble(mParam.value);
                                 break;
-                            case "36":
-                                mParams.EstimatedValue = Convert.ToDouble(mParam.value);
+                            case 81:
+                                mParams.LoanFeesLandAcquisitionLoan = Convert.ToDouble(mParam.value);
+                                break;
+                            case 60:
+                                mParams.LoanFeesConstructionLoan = Convert.ToDouble(mParam.value);
                                 break;
                         }
                     }
                 }
-               
+                mParams.CityId = Convert.ToInt32(mInputParams.CityId);
+                int mRet2 = 0;
                 // Step 1.    Save Inputs to DB -- this could eventually check for a valid returning formID and if not it cannot move to next steps
-                mResponse.FormId = await _sqlaccess.SaveSFProformaInput(mInputParams);
-                // Step 2.    Assign other vital data to OUTPUT stream 
-                mResponse.Address = mInputParams.address;
-                mResponse.CityId = Convert.ToInt32(mInputParams.CityId);
-                mResponse.InputUser = mInputParams.username;
-                mResponse.FormValues = mInputParams.parameters;
-                // Step 3.    Start the calculation
-                mResponse.StructureTypes = _calcEngine.CalcSFProforma(mParams);
+                if (mInputParams.formId is object)
+                {
+                    mResponse.FormId = Convert.ToInt32(mInputParams.formId);
+                    mResponse.Address = mInputParams.address;
+                    mResponse.CityId = Convert.ToInt32(mInputParams.CityId);
+                    mResponse.InputUser = mInputParams.username;
+                    mResponse.FormValues = mInputParams.parameters;
+                    // Step 3.    Start the calculation
+                    mResponse.StructureTypes = _recalcEngine.ReCalcProforma(mParams);
+                    mRet2 = await _sqlaccess.ProformaUpdateValues(mResponse.StructureTypes, mResponse.FormId);
+                }
+                else
+                {
+                    var UINT64FormID = await _sqlaccess.SaveSFProformaInput(mInputParams);
+                    mResponse.FormId = Convert.ToInt32(UINT64FormID);
+                    // Step 2.    Assign other vital data to OUTPUT stream 
+                    mResponse.Address = mInputParams.address;
+                    mResponse.CityId = Convert.ToInt32(mInputParams.CityId);
+                    mResponse.InputUser = mInputParams.username;
+                    mResponse.FormValues = mInputParams.parameters;
+                    // Step 3.    Start the calculation
+                    mResponse.StructureTypes = _calcEngine.CalcSFProforma(mParams);
+                    mRet2 = await _sqlaccess.SFSaveFCalcValues(mResponse.StructureTypes, mResponse.FormId);
+                }
+
                 // Step 4.    Save Calculations to DB with same FormID
                 //  TODO  ----  pass List<StructureTypesVM>  to a sql helper and save like you save InputParams
-                int mRet2 = await _sqlaccess.SFSaveFCalcValues(mResponse.StructureTypes, mResponse.FormId);
+                
             }
 
             return mResponse;
         }
 
+        public async Task<OutputModel> GetFormValues2(object request, ILambdaContext context) //task is the model if want to return
+        {
+            OutputModel mResponse = new OutputModel();
+            mySqlAccess _sqlaccess = new mySqlAccess();
+            ApiFormAuthorize mFullAuthRequest = new ApiFormAuthorize();
+            FormValueInputModel mInputForm = new FormValueInputModel();
+            FormValueModel mSingleResponse = new FormValueModel();
+            // Verify Request
+            if (request == null)
+            {
+                mSingleResponse.mResponseMessage = "Request cannot be empty";
+                //mResponse.Add(mSingleResponse);
+                context.Logger.LogLine($"ERROR:" + "RequestID: " + context.AwsRequestId + " Request string is Empty");
 
+            }
+            else
+            {
+                context.Logger.LogLine($"Info: " + "RequestID: " + context.AwsRequestId + ", Deserializing request string");
+                try
+                {
+                    mFullAuthRequest = JsonConvert.DeserializeObject<ApiFormAuthorize>(request.ToString());
+                    mInputForm = mFullAuthRequest.Body;
+                    context.Logger.LogLine($"Info: Request sent is: " + "RequestID: " + context.AwsRequestId + " " + request.ToString());
+                }
+                catch (Exception ex)
+                {
+                    mSingleResponse.mResponseMessage = "Request is Invalid: " + ex.Message;
+                    //mResponse.Add(mSingleResponse);
+                    context.Logger.LogLine($"ERROR: " + "RequestID: " + context.AwsRequestId + " Invalid Request: " + ex.Message);
+                    return mResponse;
+                }
+                context.Logger.LogLine($"Info: " + "RequestID: " + context.AwsRequestId + ", Deserializing request string");
+                mResponse = _sqlaccess.GetFormValues2(mInputForm);
+            }
+
+            return mResponse;
+        }
         #endregion
     }
 }

@@ -6,11 +6,11 @@
         "dotnet lambda help",
         "All the command line options for the Lambda command can be specified in this file."
     ],
-    "profile"     : "NWLT-Project",
+    "profile"     : "mlopez-dev",
     "region"      : "us-west-2",
     "configuration" : "Release",
     "framework"     : "netcoreapp3.1",
-    "s3-bucket"     : "elasticbeanstalk-us-west-2-187709851931",
+    "s3-bucket"     : "aws-sam-cli-managed-default-samclisourcebucket-93l3um2rl7lk",
     "template"      : "serverless.template",
     "stack-name"    : "awseb-e-tggvdgbjj5-stack"
 }

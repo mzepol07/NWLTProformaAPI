@@ -6,6 +6,7 @@ namespace NWLTLambda.Models
 {
     public class InputModel
     {
+        public string formId { get; set; }
         public string address { get; set; }
         public string username { get; set; }
         public string CityId { get; set; }

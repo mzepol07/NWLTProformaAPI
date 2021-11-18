@@ -17,6 +17,18 @@
             "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
       } 
     },
+    "SearchForms" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::SearchForms",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
+    },
     "GetFormValues" :{
         "Type" : "AWS::Serverless::Function",
          "Properties": {
@@ -112,6 +124,18 @@
         "Timeout": 30,
         "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
       }
+    },
+    "GetFormValues2" :{
+        "Type" : "AWS::Serverless::Function",
+         "Properties": {
+            "Handler": "NWLTLambda::NWLTLambda.Functions::GetFormValues2",
+            "Runtime": "dotnetcore3.1",
+            "CodeUri": "",
+            "Description": "Default function",
+            "MemorySize": 256,
+            "Timeout": 30,
+            "Role": "arn:aws:iam::187709851931:role/NWLTBasicRole"
+      } 
     }
   }
 }

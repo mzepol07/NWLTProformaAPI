@@ -17,10 +17,10 @@ namespace NWLTLambda
 {
     public class mySqlAccess
     {
-        public async Task<int> SaveSFProformaInput(InputModel mInputmodel)
+        public async Task<UInt64> SaveSFProformaInput(InputModel mInputmodel)
         {
             string mConnection = GetSecret("properties");
-            int mRetNumber = 0;
+            UInt64 mRet = 0;
 
             using (var Conn = new MySqlConnection(mConnection))
             {
@@ -35,7 +35,12 @@ namespace NWLTLambda
                     {
                         LambdaLogger.Log($"SQL INFO: executing uspStoreInputParams stored Proc. ");
                         Conn.Open();
-                        mRetNumber = await Cmd.ExecuteNonQueryAsync();
+                        // mRetNumber = await Cmd.ExecuteNonQueryAsync();
+                        MySqlDataReader mSqlReader = Cmd.ExecuteReader();
+                        while (mSqlReader.Read())
+                        {
+                            mRet = (UInt64)mSqlReader[0];
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -49,8 +54,7 @@ namespace NWLTLambda
                 }
             }
 
-
-            return mRetNumber;
+            return mRet;
         }
 
         public async Task<int> SFSaveFCalcValues(List<StructureTypesVM> mStructureTypes, int mformID)
@@ -89,7 +93,40 @@ namespace NWLTLambda
 
             return mRetNumber;
         }
+        public async Task<int> ProformaUpdateValues(List<StructureTypesVM> mStructureTypes, int mformID)
+        {
+            string mConnection = GetSecret("properties");
+            int mRetNumber = 0;
 
+            using (var Conn = new MySqlConnection(mConnection))
+            {
+                using (var Cmd = new MySqlCommand($"properties.uspUpdateSfProforma", Conn))
+                {
+                    // Open SQL Connection
+                    Cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                    Cmd.Parameters.AddWithValue("@paramList", JsonConvert.SerializeObject(mStructureTypes));
+                    Cmd.Parameters.AddWithValue("@formId", mformID);
+
+                    // Execute SQL Command
+                    try
+                    {
+                        LambdaLogger.Log($"SQL INFO: executing uspUpdateSfProforma stored Proc. ");
+                        Conn.Open();
+                        mRetNumber = await Cmd.ExecuteNonQueryAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        var mMessage = ex.Message;
+                        LambdaLogger.Log($"SQL ERROR: " + ex.Message);
+                    }
+                    finally
+                    {
+                        Conn.Close();
+                    }
+                }
+            }
+            return mRetNumber;
+        }
         public List<CityModel> GetCities()
         {
             string mConnection = GetSecret("properties");
@@ -180,6 +217,52 @@ namespace NWLTLambda
 
             return mParamList;
         }
+        public List<FormModel> SearchForms(FormSearchInputModel mFormSearchInputModel)
+        {
+            string mConnection = GetSecret("properties");
+            List<FormModel> mParamList = new List<FormModel>();
+
+            using (var Conn = new MySqlConnection(mConnection))
+            {
+                using (var Cmd = new MySqlCommand($"properties.uspSearchForms", Conn))
+                {
+                    // Open SQL Connection
+                    Cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                    Cmd.Parameters.AddWithValue("cityId", mFormSearchInputModel.cityId);
+                    Cmd.Parameters.AddWithValue("searchString", mFormSearchInputModel.SearchString);
+
+                    // Execute SQL Command
+                    try
+                    {
+                        LambdaLogger.Log($"SQL INFO: executing uspStoreInputParams stored Proc. ");
+                        Conn.Open();
+                        MySqlDataReader mSqlReader = Cmd.ExecuteReader();
+                        while (mSqlReader.Read())
+                        {
+                            FormModel mParam = new FormModel();
+                            mParam.city_id = (int)mSqlReader[0];
+                            mParam.form_id = (int)mSqlReader[1];
+                            mParam.form_name = mSqlReader[2].ToString();
+                            mParam.form_creator = mSqlReader[3].ToString();
+                            mParam.form_creation_date = mSqlReader[4].ToString();
+                            mParamList.Add(mParam);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var mMessage = ex.Message;
+                        LambdaLogger.Log($"SQL ERROR: " + ex.Message);
+                    }
+                    finally
+                    {
+                        Conn.Close();
+                    }
+                }
+            }
+
+
+            return mParamList;
+        }
 
         public List<FormValueModel> GetFormValues(FormValueInputModel mInputModel)
         {
@@ -212,6 +295,93 @@ namespace NWLTLambda
                             mParam.value = mSqlReader[6].ToString();
                             mParamList.Add(mParam);
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        var mMessage = ex.Message;
+                        LambdaLogger.Log($"SQL ERROR: " + ex.Message);
+                    }
+                    finally
+                    {
+                        Conn.Close();
+                    }
+                }
+            }
+
+
+            return mParamList;
+        }
+
+        public OutputModel GetFormValues2(FormValueInputModel mInputModel)
+        {
+            string mConnection = GetSecret("properties");
+            int mFormID = 0;
+            string mAddress = "";
+            string mCityID = "";
+            string mInputUser = "";
+            string mStructureTypeCurrent = "";
+
+            OutputModel mParamList = new OutputModel();
+            List<ParameterInputModel> mParamInputList = new List<ParameterInputModel>();
+            List<StructureTypesVM> mStructuresList = new List<StructureTypesVM>();
+            List<CalcParameterOutputModel> mListOfCalcParam = new List<CalcParameterOutputModel>();
+
+            using (var Conn = new MySqlConnection(mConnection))
+            {
+                using (var Cmd = new MySqlCommand($"properties.uspGetAllFormValues", Conn))
+                {
+                    // Open SQL Connection
+                    Cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                    Cmd.Parameters.AddWithValue("formID", mInputModel.FormId);
+
+                    // Execute SQL Command
+                    try
+                    {
+                        LambdaLogger.Log($"SQL INFO: executing uspGetFormValues stored Proc. ");
+                        Conn.Open();
+                        MySqlDataReader mSqlReader = Cmd.ExecuteReader();
+                        while (mSqlReader.Read())
+                        {
+                            //  group all form input values together
+                            if (mSqlReader[4].ToString() == "N/A")
+                            {
+                                ParameterInputModel mParamInput = new ParameterInputModel();
+                                mParamInput.parameterid = (int)mSqlReader[5];
+                                mParamInput.parametername = mSqlReader[6].ToString();
+                                mParamInput.value = mSqlReader[9].ToString();
+                                mParamInputList.Add(mParamInput);
+                            }
+                            else
+                            {
+                                //   Group all by structuretype
+                                //  StructureType, List<CalcParameterOutputModel>
+                                StructureTypesVM mCalcParam = new StructureTypesVM();
+                                if (mStructureTypeCurrent != mSqlReader[4].ToString())
+                                {
+                                    if (mStructureTypeCurrent != "")
+                                    {
+                                        mStructuresList.Add(mCalcParam);
+                                        mListOfCalcParam.Clear();
+                                    }
+                                    mStructureTypeCurrent = mSqlReader[4].ToString();
+                                    mCalcParam.StructureType = mStructureTypeCurrent;
+                                }
+                                CalcParameterOutputModel mCParamOutput = new CalcParameterOutputModel();
+                                mCParamOutput.parameterid = mSqlReader[5].ToString();
+                                mCParamOutput.parametername = mSqlReader[6].ToString();
+                                mCParamOutput.value = mSqlReader[9].ToString();
+                                mListOfCalcParam.Add(mCParamOutput);
+                            }
+                            // save formid, address, cityid, inputuser  to Vars
+                            mFormID = (int)mSqlReader[0];
+                            mAddress = mSqlReader[1].ToString();
+                            mCityID = mSqlReader[10].ToString();
+                            mInputUser = "";  //  TODO -- add inputuser to sP
+                        }
+                        mParamList.FormId = mFormID;
+                        mParamList.CityId = Convert.ToInt32(mCityID);
+                        mParamList.FormValues = mParamInputList;
+                        mParamList.StructureTypes = mStructuresList;
                     }
                     catch (Exception ex)
                     {
@@ -374,14 +544,14 @@ namespace NWLTLambda
             return mParamList;
         }
 
-        public List<ParametersOutputModel> GetFormParams(CityInputModel mCityInputModel)
+        public List<ParametersOutputModel2> GetFormParams(CityInputModel mCityInputModel)
         {
-            string mConnection = GetSecret("properties");
-            List<ParametersOutputModel> mParamList = new List<ParametersOutputModel>();
+            string mConnection = GetSecret("parameters");
+            List<ParametersOutputModel2> mParamList = new List<ParametersOutputModel2>();
 
             using (var Conn = new MySqlConnection(mConnection))
             {
-                using (var Cmd = new MySqlCommand($"properties.uspGetFormParameters", Conn))
+                using (var Cmd = new MySqlCommand($"parameters.uspGetFormParameters", Conn))
                 {
                     // Open SQL Connection
                     Cmd.CommandType = System.Data.CommandType.StoredProcedure;
@@ -390,19 +560,20 @@ namespace NWLTLambda
                     // Execute SQL Command
                     try
                     {
-                        LambdaLogger.Log($"SQL INFO: executing uspGetFormParameters stored Proc. ");
+                        LambdaLogger.Log($"SQL INFO: executing uspStoreInputParams stored Proc. ");
                         Conn.Open();
                         MySqlDataReader mSqlReader = Cmd.ExecuteReader();
                         while (mSqlReader.Read())
                         {
-                            ParametersOutputModel mParam = new ParametersOutputModel();
+                            ParametersOutputModel2 mParam = new ParametersOutputModel2();
                             mParam.ParameterId = (int)mSqlReader[0];
                             mParam.ParameterName = mSqlReader[1].ToString();
                             mParam.HtmlHeader = mSqlReader[2].ToString();
                             mParam.HtmlTag = mSqlReader[3].ToString();
                             mParam.Phase = mSqlReader[4].ToString();
-                            mParam.ParameterTypeId = (int)mSqlReader[5];
-                            mParam.ParamOrder = (int)mSqlReader[6];
+                            mParam.Stage = mSqlReader[5].ToString();
+                            mParam.ParameterTypeId = (int)mSqlReader[6];
+                            mParam.ParamOrder = (int)mSqlReader[7];
                             mParamList.Add(mParam);
                         }
                     }
@@ -472,10 +643,10 @@ namespace NWLTLambda
             return mListValues;
         }
 
-        public int GetBaseCost(int mCityID, string isHighEnd, string mStructureType) 
+        public decimal GetBaseCost(int mCityID, string isHighEnd, string mStructureType) 
         {
             string mConnection = GetSecret("lookups");
-            int mReturn = 0;
+            decimal mReturn = 0;
 
             using (var Conn = new MySqlConnection(mConnection))
             {
@@ -495,7 +666,7 @@ namespace NWLTLambda
                         MySqlDataReader mSqlReader = Cmd.ExecuteReader();
                         while (mSqlReader.Read())
                         {
-                            mReturn =  (int)mSqlReader[0];
+                            mReturn =  (decimal)mSqlReader[0];
                         }
                     }
                     catch (Exception ex)
@@ -513,10 +684,10 @@ namespace NWLTLambda
             return mReturn;
         }
 
-        public int GetDensityLimit(int mCityID, string mZoning , string mStructureType, string hasMhaSuffix, string isCorner)
+        public decimal GetDensityLimit(int mCityID, string mZoning , string mStructureType, string hasMhaSuffix, string isCorner)
         {
             string mConnection = GetSecret("lookups");
-            int mReturn = 0;
+            decimal mReturn = 0;
 
             using (var Conn = new MySqlConnection(mConnection))
             {
@@ -525,7 +696,7 @@ namespace NWLTLambda
                     // Open SQL Connection
                     Cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     Cmd.Parameters.AddWithValue("cityId", mCityID);
-                    Cmd.Parameters.AddWithValue("zoningID", mZoning);
+                    Cmd.Parameters.AddWithValue("zoningCode", mZoning);
                     Cmd.Parameters.AddWithValue("structureType", mStructureType);
                     Cmd.Parameters.AddWithValue("hasMhaSuffix", hasMhaSuffix);
                     Cmd.Parameters.AddWithValue("isCorner", isCorner);
@@ -539,7 +710,7 @@ namespace NWLTLambda
                         MySqlDataReader mSqlReader = Cmd.ExecuteReader();
                         while (mSqlReader.Read())
                         {
-                            mReturn = (int)mSqlReader[0];
+                            mReturn = (decimal)mSqlReader[0];
                         }
                     }
                     catch (Exception ex)
@@ -557,10 +728,10 @@ namespace NWLTLambda
             return mReturn;
         }
 
-        public int GetFAR(int mCityID, string mZoning, string mStructureType, string hasMhaSuffix, string isGrowthArea)
+        public decimal GetFAR(int mCityID, string mZoning, string mStructureType, string hasMhaSuffix, string isGrowthArea)
         {
             string mConnection = GetSecret("lookups");
-            int mReturn = 0;
+            decimal mReturn = 0;
 
             using (var Conn = new MySqlConnection(mConnection))
             {
@@ -569,7 +740,7 @@ namespace NWLTLambda
                     // Open SQL Connection
                     Cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     Cmd.Parameters.AddWithValue("cityId", mCityID);
-                    Cmd.Parameters.AddWithValue("zoningID", mZoning);
+                    Cmd.Parameters.AddWithValue("zoningCode", mZoning);
                     Cmd.Parameters.AddWithValue("structureType", mStructureType);
                     Cmd.Parameters.AddWithValue("hasMhaSuffix", hasMhaSuffix);
                     Cmd.Parameters.AddWithValue("isGrowthArea", isGrowthArea);
@@ -582,7 +753,7 @@ namespace NWLTLambda
                         MySqlDataReader mSqlReader = Cmd.ExecuteReader();
                         while (mSqlReader.Read())
                         {
-                            mReturn = (int)mSqlReader[0];
+                            mReturn = (decimal)mSqlReader[0];
                         }
                     }
                     catch (Exception ex)
@@ -600,10 +771,10 @@ namespace NWLTLambda
             return mReturn;
         }
 
-        public int GetMHAFee(int mCityID, string mhaAreaID, string mhaSuffixID)
+        public decimal GetMHAFee(int mCityID, string mhaAreaID, string mhaSuffixID)
         {
             string mConnection = GetSecret("lookups");
-            int mReturn = 0;
+            decimal mReturn = 0;
 
             using (var Conn = new MySqlConnection(mConnection))
             {
@@ -612,8 +783,8 @@ namespace NWLTLambda
                     // Open SQL Connection
                     Cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     Cmd.Parameters.AddWithValue("cityId", mCityID);
-                    Cmd.Parameters.AddWithValue("mhaAreaID", mhaAreaID);
-                    Cmd.Parameters.AddWithValue("mhaSuffixID", mhaSuffixID);
+                    Cmd.Parameters.AddWithValue("mhaArea", mhaAreaID);
+                    Cmd.Parameters.AddWithValue("mhaSuffix", mhaSuffixID);
 
                     // Execute SQL Command
                     try
@@ -623,7 +794,7 @@ namespace NWLTLambda
                         MySqlDataReader mSqlReader = Cmd.ExecuteReader();
                         while (mSqlReader.Read())
                         {
-                            mReturn = (int)mSqlReader[0];
+                            mReturn = (decimal)mSqlReader[0];
                         }
                     }
                     catch (Exception ex)
