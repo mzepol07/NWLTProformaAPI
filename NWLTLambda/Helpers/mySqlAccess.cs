@@ -426,8 +426,9 @@ namespace NWLTLambda
                             mParam.HtmlHeader = mSqlReader[2].ToString();
                             mParam.HtmlTag = mSqlReader[3].ToString();
                             mParam.Phase = mSqlReader[4].ToString();
-                            mParam.ParameterTypeId = (int)mSqlReader[5];
-                            mParam.ParamOrder = (int)mSqlReader[6];
+                            mParam.Stage = mSqlReader[5].ToString();
+                            mParam.ParameterTypeId = (int)mSqlReader[6];
+                            mParam.ParamOrder = (int)mSqlReader[7];
                             mParamList.Add(mParam);
                         }
                     }
