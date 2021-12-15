@@ -367,6 +367,7 @@ namespace NWLTLambda
             CalcEngine _calcEngine = new CalcEngine();
             ReCalcEngine _recalcEngine = new ReCalcEngine();
             ParametersList mParams = new ParametersList();
+            List<StructureTypesVM> mStructureParams = new List<StructureTypesVM>();
 
             // Verify Request
             if (request == null)
@@ -510,13 +511,21 @@ namespace NWLTLambda
                 // Step 1.    Save Inputs to DB -- this could eventually check for a valid returning formID and if not it cannot move to next steps
                 if (mInputParams.formId is object)
                 {
+                    // Add structure type to mInput Params
+                    
                     mResponse.FormId = Convert.ToInt32(mInputParams.formId);
                     mResponse.Address = mInputParams.address;
                     mResponse.CityId = Convert.ToInt32(mInputParams.CityId);
                     mResponse.InputUser = mInputParams.username;
                     mResponse.FormValues = mInputParams.parameters;
                     // Step 3.    Start the calculation
-                    mResponse.StructureTypes = _recalcEngine.ReCalcProforma(mParams);
+                    foreach (StructureTypesVM mStructure in mInputParams.StructureTypes)
+                    {
+                        mParams.StructureType = mStructure.StructureType;
+                        var mLatestStruct = _recalcEngine.ReCalcProforma(mParams);
+                        mStructureParams.Add(mLatestStruct);
+                    }
+                    mResponse.StructureTypes = mStructureParams;
                     mRet2 = await _sqlaccess.ProformaUpdateValues(mResponse.StructureTypes, mResponse.FormId);
                 }
                 else

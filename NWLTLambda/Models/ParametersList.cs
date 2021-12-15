@@ -6,6 +6,7 @@ namespace NWLTLambda.Models
 {
     public class ParametersList
     {
+        public string StructureType { get; set; }
         public int CityId { get; set; }
         public string Address { get; set; }
         public string GrowthArea { get; set; }

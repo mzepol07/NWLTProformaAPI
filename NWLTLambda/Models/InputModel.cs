@@ -11,5 +11,6 @@ namespace NWLTLambda.Models
         public string username { get; set; }
         public string CityId { get; set; }
         public List<ParameterInputModel> parameters { get; set; }
+        public List<StructureTypesVM> StructureTypes { get; set; }
     }
 }
